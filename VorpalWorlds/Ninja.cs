@@ -50,8 +50,36 @@ namespace VorpalWorlds
             MovingJumpingRight,
         };
 
+
+        //Timers
+
+
+
+
         NinjaState ninjaState = NinjaState.Idle;
-        TimeSpan timer;
+        TimeSpan timerMain;
+
+        /// <summary>
+        /// TIMER MAIN
+        /// </summary>
+
+        TimeSpan timerIdleStamina;
+
+        /// <summary>
+        /// TIMER IDLE STAMINA
+        /// </summary>
+
+        TimeSpan timerWalkStamina;
+
+        /// <summary>
+        /// TIMER WALK STAMINA
+        /// </summary>
+
+        TimeSpan timerRunStamina;
+
+        /// <summary>
+        /// TIMER RUN STAMINA
+        /// </summary>
 
         private Vector2 initialPosition;
         private float UpwardsVelocity = 0;
@@ -71,17 +99,20 @@ namespace VorpalWorlds
 
         public void Update(KeyboardState keyboardState, KeyboardState lastKeyBoardState, Rectangle screen, GameTime gameTime)
         {
-            timer += gameTime.ElapsedGameTime;
+            timerMain += gameTime.ElapsedGameTime;
+            timerWalkStamina += gameTime.ElapsedGameTime;
+            timerIdleStamina += gameTime.ElapsedGameTime;
+            timerRunStamina += gameTime.ElapsedGameTime;
 
-            if (staminaAmount > 7)
-            {
-                staminaAmount = 7;
-            }
+            //if (staminaAmount > 7)
+            //{
+            //    staminaAmount = 6;
+            //}
 
-            else if (staminaAmount < 0)
-            {
-                staminaAmount = 0;
-            }
+            //else if (staminaAmount < 0)
+            //{
+            //    staminaAmount = 0;
+            //}
 
             if (ninjaState == NinjaState.Idle)
             {
@@ -89,13 +120,24 @@ namespace VorpalWorlds
                 {
                     idleNum = 0;
                 }
-                if (timer.TotalMilliseconds > 45)
+                if (timerMain.TotalMilliseconds > 45)
                 {
-                    timer = TimeSpan.Zero;
+                    timerMain = TimeSpan.Zero;
                     idleNum++;
-                    staminaAmount++;
+
+                }
+
+
+                if (timerIdleStamina.TotalMilliseconds > 2000)
+                {
+                    timerIdleStamina = TimeSpan.Zero;
+                    if (staminaAmount < 7)
+                    {
+                        staminaAmount++;
+                    }
                 }
             }
+
 
 
             if (Pos.Y > 380)
@@ -111,6 +153,11 @@ namespace VorpalWorlds
             {
                 if (Pos.Y - UpwardsVelocity > initialPosition.Y)
                 {
+                    if (staminaAmount > 0)
+                    {
+                        staminaAmount--;
+                    }
+
                     UpwardsVelocity = 0;
                     isFalling = false;
                 }
@@ -122,7 +169,12 @@ namespace VorpalWorlds
             if (ninjaState == NinjaState.Jumping || ninjaState == NinjaState.MovingJumpingLeft || ninjaState == NinjaState.MovingJumpingRight)
             {
                 isFalling = true;
-                staminaAmount--;
+
+                //if (staminaAmount > 0)
+                //{
+                //    staminaAmount--;
+                //}
+
                 /*
                 if (Pos.Y - UpwardsVelocity > initialPosition.Y)
                 {
@@ -136,9 +188,25 @@ namespace VorpalWorlds
             }
             else if (keyboardState.IsKeyDown(Keys.LeftControl) && isCrouch == false)
             {
-                SpeedX = 8;
-                ninjaState = NinjaState.Running;
-                staminaAmount--;
+                if (staminaAmount > 4)
+                {
+                    SpeedX = 8;
+                    ninjaState = NinjaState.Running;
+                    if (timerRunStamina.TotalMilliseconds > 500)
+                    {
+                        timerRunStamina = TimeSpan.Zero;
+                        if (staminaAmount > 0)
+                        {
+                            staminaAmount--;
+                        }
+                    }
+                }
+
+                else if (staminaAmount <= 4)
+                {
+                    ninjaState = NinjaState.Walking;
+                }
+
             }
 
             else if (keyboardState.IsKeyDown(Keys.LeftShift) && ninjaState != NinjaState.Running)
@@ -156,8 +224,11 @@ namespace VorpalWorlds
 
             if (keyboardState.IsKeyDown(Keys.Space) && ninjaState != NinjaState.Jumping && isCrouch == false && !isFalling)
             {
-                ninjaState = NinjaState.Jumping;
-                UpwardsVelocity = 10;
+                if (staminaAmount > 3)
+                {
+                    ninjaState = NinjaState.Jumping;
+                    UpwardsVelocity = 10;
+                }
             }
 
             /*if (keyboardState.IsKeyDown(Keys.A) && keyboardState.IsKeyDown(Keys.Space) && ninjaState == NinjaState.Idle)
@@ -182,30 +253,57 @@ namespace VorpalWorlds
             {
                 if (ninjaState == NinjaState.Running)
                 {
-                    ninjaState = NinjaState.Running;
+                    if (staminaAmount > 4)
+                    {
+                        ninjaState = NinjaState.Running;
+                    }
+                    else if (staminaAmount <= 4)
+                    {
+                        ninjaState = NinjaState.Walking;
+                    }
                     if (runImage == 6)
                     {
                         runImage = 0;
                     }
-                    if (timer.TotalMilliseconds > 20)
+                    if (timerMain.TotalMilliseconds > 20)
                     {
-                        timer = TimeSpan.Zero;
+                        timerMain = TimeSpan.Zero;
                         runImage++;
-                        staminaAmount--;
                     }
+                    //if (timerRunStamina.TotalMilliseconds > 100)
+                    //{
+                    //    timerRunStamina = TimeSpan.Zero;
+                    //    staminaAmount--;
+                    //}
                 }
 
                 else
                 {
                     ninjaState = NinjaState.Walking;
+
+                    if (timerWalkStamina.TotalMilliseconds > 30)
+                    {
+                        timerWalkStamina = TimeSpan.Zero;
+                        walkDistance++;
+                    }
+
+                    //if (walkDistance == 30)
+                    //{
+                    //    walkDistance = 0;
+                    //    if (staminaAmount < 7)
+                    //    {
+                    //        staminaAmount++;
+                    //    }
+                    //}
+
                     if (runImage == 6)
                     {
                         runImage = 0;
                     }
 
-                    if (timer.TotalMilliseconds > 50)
+                    if (timerMain.TotalMilliseconds > 50)
                     {
-                        timer = TimeSpan.Zero;
+                        timerMain = TimeSpan.Zero;
                         runImage++;
                     }
                 }
@@ -217,23 +315,59 @@ namespace VorpalWorlds
             {
                 if (ninjaState == NinjaState.Running)
                 {
-                    ninjaState = NinjaState.Running;
-                    if (timer.TotalMilliseconds > 20)
+                    if (staminaAmount > 4)
                     {
-                        timer = TimeSpan.Zero;
+                        ninjaState = NinjaState.Running;
+                    }
+                    else if (staminaAmount <= 4)
+                    {
+                        ninjaState = NinjaState.Walking;
+                    }
+
+
+
+                    if (timerMain.TotalMilliseconds > 20)
+                    {
+                        timerMain = TimeSpan.Zero;
                         runImage++;
                     }
+
+
+
+
+                    //if (timerRunStamina.TotalMilliseconds > 100)
+                    //{
+                    //    timerRunStamina = TimeSpan.Zero;
+                    //    staminaAmount--;
+                    //}
                 }
 
                 else
                 {
                     ninjaState = NinjaState.Walking;
 
-                    if (timer.TotalMilliseconds > 50)
+                    if (timerMain.TotalMilliseconds > 50)
                     {
-                        timer = TimeSpan.Zero;
+                        timerMain = TimeSpan.Zero;
                         runImage++;
                     }
+
+                    if (timerWalkStamina.TotalMilliseconds > 30)
+                    {
+                        timerWalkStamina = TimeSpan.Zero;
+                        walkDistance++;
+                    }
+
+                    //if (walkDistance == 30)
+                    //{
+                    //    walkDistance = 0;
+                    //    if (staminaAmount < 7)
+                    //    {
+                    //        staminaAmount++;
+                    //    }
+
+                    //}
+
 
                 }
 
@@ -267,10 +401,14 @@ namespace VorpalWorlds
             {
                 if (ninjaState != NinjaState.Jumping /*|| ninjaState != NinjaState.MovingJumpingLeft || ninjaState != NinjaState.MovingJumpingRight*/)
                 {
-
+                    
 
                     if (ninjaState == NinjaState.Running || ninjaState == NinjaState.Walking)
                     {
+                        if (staminaAmount <= 4)
+                        {
+                            ninjaState = NinjaState.Walking;
+                        }
                         Image = running[runImage % running.Count];
                     }
 
@@ -299,11 +437,12 @@ namespace VorpalWorlds
             {
                 spriteBatch.Draw(staminaImage, new Vector2(posX1, 0), null, Color.White, 0f, Vector2.Zero, new Vector2(1, 1), SpriteEffects.None, 0f);
                 posX1 += 40;
-                if (posX1 > 280)
-                {
-                    posX1 = 0;
-                }
+                //if (posX1 > 280)
+                //{
+                //    posX1 = 0;
+                //}
             }
+            posX1 = 0;
         }
     }
 }
